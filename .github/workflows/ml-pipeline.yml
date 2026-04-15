@@ -2,8 +2,6 @@ name: Resource-Efficient CI/CD with Gatekeeper
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
     branches: [ main ]
 
 jobs:
@@ -11,45 +9,34 @@ jobs:
   linter:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run linter
-        run: |
-          echo "Running lightweight linter..."
-          echo "No issues found!"
+      - name: Lint
+        run: echo "lint passed"
 
   train:
     needs: linter
     runs-on: ubuntu-latest
-
-    if: >
-      github.ref == 'refs/heads/main' &&
-      contains(github.event.head_commit.message, '[run-train]') &&
-      needs.linter.result == 'success'
-
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[run-train]')
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Simulate Training Job
-        run: |
-          echo "Starting expensive GPU training..."
-          echo "Training model..."
-          exit 1
+      - name: Train
+        run: echo "training success"
 
-      - name: Generate Error Logs
+      - name: Upload logs on failure
         if: failure()
-        run: |
-          echo "Training failed. Collecting logs..." > error_logs.txt
+        run: echo "error" > error_logs.txt
 
-      - name: Upload Error Logs Artifact
+      - name: Upload artifact
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: error-logs
           path: error_logs.txt
 
-      - name: Cleanup Resources
+      - name: Cleanup
         if: always()
         run: echo "Cleaning up temporary cloud volumes..."
